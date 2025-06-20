@@ -288,7 +288,82 @@ class EDA:
             plt.legend()
 
             st.pyplot(plt)
+        with tabs[2]:
+            st.header("📈 Population Trends: National Level Forecast")    
+             df.columns = df.columns.str.strip()
 
+            required_cols = ['연도', '지역', '인구']
+            if not all(col in df.columns for col in required_cols):
+                st.error(f"Missing one of the required columns: {required_cols}")
+                return
+
+            # 숫자형 변환
+            df['인구'] = pd.to_numeric(df['인구'], errors='coerce').fillna(0)
+
+            # '전국' 제외
+            df = df[df['지역'] != '전국']
+
+            # 연도 오름차순 정렬
+            df.sort_values(by='연도', inplace=True)
+
+            # 최근 5년 확인
+            recent_years = sorted(df['연도'].unique())[-5:]
+            df_recent = df[df['연도'].isin(recent_years)]
+
+            # 지역별 인구 변화량 계산
+            pivot = df_recent.pivot(index='연도', columns='지역', values='인구')
+            diff = (pivot.iloc[-1] - pivot.iloc[0]).sort_values(ascending=False)  # 최근 - 5년 전
+            rate = ((pivot.iloc[-1] - pivot.iloc[0]) / pivot.iloc[0] * 100).sort_values(ascending=False)
+
+            # 지역명 영어 변환 (샘플 매핑)
+            region_map = {
+                '서울': 'Seoul', '부산': 'Busan', '대구': 'Daegu', '인천': 'Incheon', '광주': 'Gwangju',
+                '대전': 'Daejeon', '울산': 'Ulsan', '세종': 'Sejong', '경기': 'Gyeonggi', '강원': 'Gangwon',
+                '충북': 'Chungbuk', '충남': 'Chungnam', '전북': 'Jeonbuk', '전남': 'Jeonnam',
+                '경북': 'Gyeongbuk', '경남': 'Gyeongnam', '제주': 'Jeju'
+            }
+            diff.index = diff.index.map(region_map.get)
+            rate.index = rate.index.map(region_map.get)
+
+            # 단위 변환 (천명)
+            diff_thousands = (diff / 1000).round(1)
+            rate_percent = rate.round(2)
+
+            # 🔷 변화량 그래프
+            st.subheader("📉 Population Change (Last 5 Years)")
+            fig1, ax1 = plt.subplots(figsize=(10, 8))
+            sns.barplot(x=diff_thousands.values, y=diff_thousands.index, ax=ax1, palette="Blues_r")
+            ax1.set_title("Population Change by Region (in Thousands)")
+            ax1.set_xlabel("Change (Thousands)")
+            ax1.set_ylabel("Region")
+
+            # 막대에 수치 표시
+            for i, v in enumerate(diff_thousands.values):
+                ax1.text(v + 1, i, f"{v}", va='center')
+
+            st.pyplot(fig1)
+
+            # 🔷 변화율 그래프
+            st.subheader("📈 Population Growth Rate (%)")
+            fig2, ax2 = plt.subplots(figsize=(10, 8))
+            sns.barplot(x=rate_percent.values, y=rate_percent.index, ax=ax2, palette="Greens_r")
+            ax2.set_title("Population Growth Rate by Region")
+            ax2.set_xlabel("Change Rate (%)")
+            ax2.set_ylabel("Region")
+
+            for i, v in enumerate(rate_percent.values):
+                ax2.text(v + 0.2, i, f"{v:.2f}%", va='center')
+
+            st.pyplot(fig2)
+
+            # 🔍 해설
+            st.markdown("### 🧾 Interpretation")
+            st.markdown(f"""
+            - The **population change** graph shows the absolute increase or decrease in population (in thousands) over the last 5 years per region.
+            - The **growth rate** graph shows the percentage change compared to the population 5 years ago.
+            - Regions with a **positive bar** indicate growth, while **negative bars** show a population decline.
+            - This analysis helps identify **demographically growing or shrinking areas**, useful for policy, infrastructure, or economic planning.
+            """)
 
 # ---------------------
 # 페이지 객체 생성
