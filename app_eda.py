@@ -217,6 +217,7 @@ class EDA:
 
         # 1. 목적 & 분석 절차
         with tabs[0]:
+            df = pd.read_csv(uploaded)
             st.dataframe(df.head())
 
             # '세종' 지역 필터링
