@@ -216,10 +216,6 @@ class EDA:
             # 숫자형 변환: '인구', '출생아수(명)', '사망자수(명)'
             for col in ['인구', '출생아수(명)', '사망자수(명)']:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
-
-            st.subheader("🧼 전처리된 전체 데이터 미리보기")
-            st.dataframe(df.head())
-
             # 전체 데이터 기준 요약 통계
             st.subheader("📈 전체 데이터에 대한 요약 통계 (describe())")
             st.dataframe(df.describe())
