@@ -288,7 +288,7 @@ class EDA:
 
             st.pyplot(plt)
         with tabs[2]:
-            st.header("📈 Population Trends: National Level Forecast")    
+            st.header("📊 Regional Population Change Analysis (Last 5 Years)")    
 
             required_cols = ['연도', '지역', '인구']
             if not all(col in df.columns for col in required_cols):
@@ -362,7 +362,49 @@ class EDA:
             - Regions with a **positive bar** indicate growth, while **negative bars** show a population decline.
             - This analysis helps identify **demographically growing or shrinking areas**, useful for policy, infrastructure, or economic planning.
             """)
+        with tabs[3]:
+            st.header("📋 Top 100 Population Changes by Region and Year")
+            if not all(col in df.columns for col in ['연도', '지역', '인구']):
+                st.error("❌ Required columns ('연도', '지역', '인구') are missing.")
+                return
 
+            df = df[df['지역'] != '전국'].copy()
+            df['인구'] = pd.to_numeric(df['인구'], errors='coerce')
+            df.dropna(subset=['인구'], inplace=True)
+
+            # 연도 정렬
+            df.sort_values(by=['지역', '연도'], inplace=True)
+
+            # 증감 계산
+            df['증감'] = df.groupby('지역')['인구'].diff()
+
+            # 최근 100개 절댓값 기준 증감 상위
+            top_changes = df.dropna(subset=['증감']).copy()
+            top_changes['abs_증감'] = top_changes['증감'].abs()
+            top_100 = top_changes.sort_values(by='abs_증감', ascending=False).head(100)
+
+            # 천단위 콤마 적용
+            top_100['인구'] = top_100['인구'].apply(lambda x: f"{int(x):,}")
+            top_100['증감'] = top_100['증감'].apply(lambda x: f"{int(x):,}")
+
+            # 시각적 강조 (증감 열 배경색)
+            def highlight_diff(val):
+                try:
+                    val_int = int(val.replace(",", ""))
+                    if val_int > 0:
+                        color = f'background-color: rgba(0, 100, 255, 0.15);'
+                    elif val_int < 0:
+                        color = f'background-color: rgba(255, 0, 0, 0.15);'
+                    else:
+                        color = ''
+                    return color
+                except:
+                    return ''
+
+            styled = top_100[['연도', '지역', '인구', '증감']].style.applymap(highlight_diff, subset=['증감'])
+
+            st.subheader("📈 Top 100 Population Changes")
+            st.dataframe(styled, use_container_width=True)
 # ---------------------
 # 페이지 객체 생성
 # ---------------------
