@@ -48,19 +48,10 @@ class Home:
 
         # Kaggle 데이터셋 출처 및 소개
         st.markdown("""
-                ---
-                **Bike Sharing Demand 데이터셋**  
-                - 제공처: [Kaggle Bike Sharing Demand Competition](https://www.kaggle.com/c/bike-sharing-demand)  
-                - 설명: 2011–2012년 캘리포니아 주의 수도인 미국 워싱턴 D.C. 인근 도시에서 시간별 자전거 대여량을 기록한 데이터  
-                - 주요 변수:  
-                  - `datetime`: 날짜 및 시간  
-                  - `season`: 계절  
-                  - `holiday`: 공휴일 여부  
-                  - `workingday`: 근무일 여부  
-                  - `weather`: 날씨 상태  
-                  - `temp`, `atemp`: 기온 및 체감온도  
-                  - `humidity`, `windspeed`: 습도 및 풍속  
-                  - `casual`, `registered`, `count`: 비등록·등록·전체 대여 횟수  
+                이 앱은 대한민국의 **인구 관련 공공데이터(population_trends.csv)**를 기반으로,
+연도별/지역별 인구 통계, 출생아 수, 사망자 수 등을 다양한 시각적 및 통계적 방식으로 탐색(EDA)할 수 있는 인터랙티브 대시보드입니다.
+
+Streamlit 프레임워크를 기반으로 개발되었으며, CSV 파일 업로드만으로 누구나 쉽게 인구 데이터를 분석할 수 있습니다.
                 """)
 
 # ---------------------
@@ -218,25 +209,31 @@ class EDA:
         df.columns = df.columns.str.strip()
         # 1. 목적 & 분석 절차
         with tabs[0]:
-            # '세종' 지역 필터링
-            sejong_df = df[df['지역'].str.contains('세종')].copy()
+            st.dataframe(df.head())
 
-            # '-'를 0으로 치환
-            sejong_df.replace('-', 0, inplace=True)
+            # '세종' 지역만 추출하여 전처리
+            sejong_mask = df['지역'].astype(str).str.contains('세종')
+            df_sejong = df[sejong_mask].copy()
+
+            # '-' → 0 치환
+            df_sejong.replace('-', 0, inplace=True)
 
             # 숫자형 변환
             for col in ['인구', '출생아수(명)', '사망자수(명)']:
-                sejong_df[col] = pd.to_numeric(sejong_df[col], errors='coerce').fillna(0)
+                df_sejong[col] = pd.to_numeric(df_sejong[col], errors='coerce').fillna(0)
 
-            st.subheader("전처리된 세종 지역 데이터")
-            st.dataframe(sejong_df.head())
-            st.header("📈 기초통계 (describe())")
-            st.dataframe(sejong_df.describe())
-            # info() 출력은 문자열로 캡처해야 함
+            st.subheader("🧼 전처리된 '세종' 지역 데이터 미리보기")
+            st.dataframe(df_sejong.head())
+
+            # 전체 데이터 기준 요약 통계
+            st.subheader("📈 전체 데이터에 대한 요약 통계 (describe())")
+            st.dataframe(df.describe(include='all'))
+
+            # info()는 문자열로 캡처
+            st.subheader("🧾 전체 데이터프레임 구조 (info())")
             buffer = io.StringIO()
-            sejong_df.info(buf=buffer)
+            df.info(buf=buffer)
             info_str = buffer.getvalue()
-            st.subheader("🧾 데이터프레임 구조 (info())")
             st.text(info_str)
         with tabs[1]:
             st.header("📈 Population Trends: National Level Forecast")
