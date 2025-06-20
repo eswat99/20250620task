@@ -210,26 +210,21 @@ class EDA:
         # 1. 목적 & 분석 절차
         with tabs[0]:
             st.dataframe(df.head())
+            # 전처리: '-' → 0 치환
+            df.replace('-', 0, inplace=True)
 
-            # '세종' 지역만 추출하여 전처리
-            sejong_mask = df['지역'].astype(str).str.contains('세종')
-            df_sejong = df[sejong_mask].copy()
-
-            # '-' → 0 치환
-            df_sejong.replace('-', 0, inplace=True)
-
-            # 숫자형 변환
+            # 숫자형 변환: '인구', '출생아수(명)', '사망자수(명)'
             for col in ['인구', '출생아수(명)', '사망자수(명)']:
-                df_sejong[col] = pd.to_numeric(df_sejong[col], errors='coerce').fillna(0)
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
-            st.subheader("🧼 전처리된 '세종' 지역 데이터 미리보기")
-            st.dataframe(df_sejong.head())
+            st.subheader("🧼 전처리된 전체 데이터 미리보기")
+            st.dataframe(df.head())
 
             # 전체 데이터 기준 요약 통계
             st.subheader("📈 전체 데이터에 대한 요약 통계 (describe())")
-            st.dataframe(df.describe(include='all'))
+            st.dataframe(df.describe())
 
-            # info()는 문자열로 캡처
+            # info()는 문자열로 캡처해서 출력
             st.subheader("🧾 전체 데이터프레임 구조 (info())")
             buffer = io.StringIO()
             df.info(buf=buffer)
