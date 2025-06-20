@@ -212,7 +212,7 @@ class EDA:
         st.dataframe(df.head())
 
         # '세종' 지역 필터링
-        sejong_df = df[df['행정구역'].str.contains('세종')].copy()
+        sejong_df = df[df['지역'].str.contains('세종')].copy()
 
         # '-'를 0으로 치환
         sejong_df.replace('-', 0, inplace=True)
@@ -241,6 +241,7 @@ class EDA:
             info_str = buffer.getvalue()
             st.subheader("🧾 데이터프레임 구조 (info())")
             st.text(info_str)
+
 
 
 # ---------------------
