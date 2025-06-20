@@ -214,12 +214,9 @@ class EDA:
             "3. 변화량 분석",
             "4. 시각화"
         ])
-
+        df = pd.read_csv(uploaded)
         # 1. 목적 & 분석 절차
         with tabs[0]:
-            df = pd.read_csv(uploaded)
-            st.dataframe(df.head())
-
             # '세종' 지역 필터링
             sejong_df = df[df['지역'].str.contains('세종')].copy()
 
@@ -242,7 +239,6 @@ class EDA:
             st.text(info_str)
         with tabs[1]:
             st.header("📈 Population Trends: National Level Forecast")
-            df = pd.read_csv(uploaded)
             df.columns = df.columns.str.strip()  # 열 이름 공백 제거
 
             required_cols = ['연도', '지역', '인구', '출생아수(명)', '사망자수(명)']
