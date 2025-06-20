@@ -215,6 +215,7 @@ class EDA:
             "4. 시각화"
         ])
         df = pd.read_csv(uploaded)
+        df.columns = df.columns.str.strip()
         # 1. 목적 & 분석 절차
         with tabs[0]:
             # '세종' 지역 필터링
@@ -239,8 +240,6 @@ class EDA:
             st.text(info_str)
         with tabs[1]:
             st.header("📈 Population Trends: National Level Forecast")
-            df.columns = df.columns.str.strip()  # 열 이름 공백 제거
-
             required_cols = ['연도', '지역', '인구', '출생아수(명)', '사망자수(명)']
             for col in required_cols:
                 if col not in df.columns:
@@ -290,7 +289,6 @@ class EDA:
             st.pyplot(plt)
         with tabs[2]:
             st.header("📈 Population Trends: National Level Forecast")    
-             df.columns = df.columns.str.strip()
 
             required_cols = ['연도', '지역', '인구']
             if not all(col in df.columns for col in required_cols):
