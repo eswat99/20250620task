@@ -405,6 +405,52 @@ class EDA:
 
             st.subheader("📈 Top 100 Population Changes")
             st.dataframe(styled, use_container_width=True)
+        with tabs[4]:
+            if not all(col in df.columns for col in ['연도', '지역', '인구']):
+                st.error("CSV must contain columns: '연도', '지역', '인구'")
+                return
+            # 전국 제외 & 숫자형 변환
+            df = df[df['지역'] != '전국'].copy()
+            df['인구'] = pd.to_numeric(df['인구'], errors='coerce')
+            df.dropna(subset=['인구'], inplace=True)
+
+            # 지역명 영문 변환
+            region_map = {
+                '서울': 'Seoul', '부산': 'Busan', '대구': 'Daegu', '인천': 'Incheon', '광주': 'Gwangju',
+                '대전': 'Daejeon', '울산': 'Ulsan', '세종': 'Sejong', '경기': 'Gyeonggi', '강원': 'Gangwon',
+                '충북': 'Chungbuk', '충남': 'Chungnam', '전북': 'Jeonbuk', '전남': 'Jeonnam',
+                '경북': 'Gyeongbuk', '경남': 'Gyeongnam', '제주': 'Jeju'
+            }
+            df['Region'] = df['지역'].map(region_map)
+
+            # 피벗 테이블 생성: 행=연도, 열=지역, 값=인구
+            pivot = df.pivot_table(index='연도', columns='Region', values='인구', aggfunc='sum').fillna(0)
+
+            # 연도 순 정렬
+            pivot.sort_index(inplace=True)
+
+            # 그래프 그리기
+            st.subheader("📈 Stacked Area Chart by Region")
+
+            plt.figure(figsize=(12, 6))
+            sns.set_palette("tab20")  # 명확한 구분을 위한 색상 세트
+
+            plt.stackplot(
+                pivot.index,
+                pivot.T.values,
+                labels=pivot.columns,
+                alpha=0.9
+            )
+
+            plt.legend(loc='upper left', bbox_to_anchor=(1.01, 1), fontsize='small')
+            plt.title("Regional Population Over Time (Stacked Area)")
+            plt.xlabel("Year")
+            plt.ylabel("Population")
+            plt.tight_layout()
+
+            st.pyplot(plt)
+
+            st.markdown("This chart visualizes population contributions by each region over time. The stacked area shows cumulative growth and relative share.")
 # ---------------------
 # 페이지 객체 생성
 # ---------------------
