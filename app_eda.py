@@ -202,27 +202,11 @@ class Logout:
 # ---------------------
 class EDA:
     def __init__(self):
-        st.title("📊 인구 동향 데이터 분석 (세종 지역)")
-        uploaded = st.file_uploader("데이터셋 업로드 (train.csv)", type="csv")
+        st.title("📊 인구 동향 데이터 분석")
+        uploaded = st.file_uploader("데이터셋 업로드 (population_trends.csv)", type="csv")
         if not uploaded:
-            st.info("train.csv 파일을 업로드 해주세요.")
+            st.info("population_trends.csv 파일을 업로드 해주세요.")
             return
-
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head())
-
-        # '세종' 지역 필터링
-        sejong_df = df[df['지역'].str.contains('세종')].copy()
-
-        # '-'를 0으로 치환
-        sejong_df.replace('-', 0, inplace=True)
-
-        # 숫자형 변환
-        for col in ['인구', '출생아수(명)', '사망자수(명)']:
-            sejong_df[col] = pd.to_numeric(sejong_df[col], errors='coerce').fillna(0)
-
-        st.subheader("전처리된 세종 지역 데이터")
-        st.dataframe(sejong_df.head())
         tabs = st.tabs([
             "1. 기초통계",
             "2. 연도별 추이",
