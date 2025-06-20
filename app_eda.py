@@ -224,15 +224,38 @@ class EDA:
         st.subheader("전처리된 세종 지역 데이터")
         st.dataframe(sejong_df.head())
         tabs = st.tabs([
-            "1. 기초통계"
-            "2. 연도별 추이"
-            "3. 지역별 분석"
-            "4. 변화량 분석"
+            "1. 기초통계",
+            "2. 연도별 추이",
+            "3. 지역별 분석",
+            "4. 변화량 분석",
             "5. 시각화"
         ])
 
         # 1. 목적 & 분석 절차
         with tabs[0]:
+            st.dataframe(df.head())
+
+            # '세종' 지역 필터링
+            sejong_df = df[df['지역'].str.contains('세종')].copy()
+
+            # '-'를 0으로 치환
+            sejong_df.replace('-', 0, inplace=True)
+
+            # 숫자형 변환
+            for col in ['인구', '출생아수(명)', '사망자수(명)']:
+                sejong_df[col] = pd.to_numeric(sejong_df[col], errors='coerce').fillna(0)
+
+            st.subheader("전처리된 세종 지역 데이터")
+            st.dataframe(sejong_df.head())
+            st.header("📈 기초통계 (describe())")
+            st.dataframe(sejong_df.describe())
+            # info() 출력은 문자열로 캡처해야 함
+            buffer = io.StringIO()
+            sejong_df.info(buf=buffer)
+            info_str = buffer.getvalue()
+            st.subheader("🧾 데이터프레임 구조 (info())")
+            st.text(info_str)
+        with tabs[1]:
             st.header("📈 기초통계 (describe())")
             st.dataframe(sejong_df.describe())
             # info() 출력은 문자열로 캡처해야 함
