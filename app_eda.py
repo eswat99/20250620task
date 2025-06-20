@@ -256,15 +256,57 @@ class EDA:
             st.subheader("🧾 데이터프레임 구조 (info())")
             st.text(info_str)
         with tabs[1]:
-            st.header("📈 기초통계 (describe())")
-            st.dataframe(sejong_df.describe())
-            # info() 출력은 문자열로 캡처해야 함
-            buffer = io.StringIO()
-            sejong_df.info(buf=buffer)
-            info_str = buffer.getvalue()
-            st.subheader("🧾 데이터프레임 구조 (info())")
-            st.text(info_str)
+            st.header("📈 Population Trends: National Level Forecast")
+            df = pd.read_csv(uploaded)
+            df.columns = df.columns.str.strip()  # 열 이름 공백 제거
 
+            required_cols = ['연도', '지역', '인구', '출생아수(명)', '사망자수(명)']
+            for col in required_cols:
+                if col not in df.columns:
+                    st.error(f"Column '{col}' not found in dataset.")
+                    return
+
+            # 전국 데이터 필터링
+            national_df = df[df['지역'] == '전국'].copy()
+
+            # 숫자형 변환
+            for col in ['인구', '출생아수(명)', '사망자수(명)']:
+                national_df[col] = pd.to_numeric(national_df[col], errors='coerce').fillna(0)
+
+            # 연도 오름차순 정렬
+            national_df.sort_values(by='연도', inplace=True)
+
+            # 최근 3년 평균 출생아수 및 사망자수 계산
+            recent = national_df.tail(3)
+            avg_births = recent['출생아수(명)'].mean()
+            avg_deaths = recent['사망자수(명)'].mean()
+            net_change = avg_births - avg_deaths
+            st.write(f"Recent 3-Year Avg: Births = {avg_births:.0f}, Deaths = {avg_deaths:.0f}, Net = {net_change:.0f}")
+
+            # 가장 최근 인구 데이터로부터 2035년까지 예측
+            last_year = national_df['연도'].max()
+            last_pop = national_df[national_df['연도'] == last_year]['인구'].values[0]
+            years_to_forecast = 2035 - last_year
+            forecast_pop = last_pop + net_change * years_to_forecast
+
+            # 예측 결과 추가
+            forecast_df = pd.DataFrame({'연도': [2035], '인구': [forecast_pop]})
+            combined_df = pd.concat([national_df[['연도', '인구']], forecast_df], ignore_index=True)
+
+            # 시각화
+            plt.figure(figsize=(10, 6))
+            sns.lineplot(data=combined_df, x='연도', y='인구', marker='o')
+            plt.title("Population Trend and 2035 Forecast")
+            plt.xlabel("Year")
+            plt.ylabel("Population")
+            plt.grid(True)
+
+            # 예측 지점 강조
+            plt.axvline(x=2035, color='red', linestyle='--', label='2035 Forecast')
+            plt.scatter(2035, forecast_pop, color='red')
+            plt.legend()
+
+            st.pyplot(plt)
 
 
 # ---------------------
